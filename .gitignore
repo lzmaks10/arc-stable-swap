@@ -1,0 +1,20 @@
+node_modules/
+.env
+out/
+cache/
+broadcast/
+*.log
+contract-info.json
+
+# Frontend
+frontend/.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

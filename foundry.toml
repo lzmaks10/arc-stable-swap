@@ -1,0 +1,11 @@
+[profile.default]
+src = "contracts"
+out = "out"
+libs = []
+solc_version = "0.8.20"
+via_ir = true
+optimizer = true
+optimizer_runs = 200
+
+[rpc_endpoints]
+arc = "https://rpc.testnet.arc.network"
