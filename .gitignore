@@ -5,6 +5,7 @@ cache/
 broadcast/
 *.log
 contract-info.json
+scripts/pk.txt
 
 # Frontend
 frontend/.vercel/

@@ -161,6 +161,7 @@
     <div class="top-right">
       <span class="chain-badge">Arc Testnet</span>
       <button id="btnConnect">Connect Wallet</button>
+      <span id="walletStatus" style="font-size:0.7rem;color:var(--muted);"></span>
     </div>
   </header>
 
@@ -241,6 +242,8 @@
           <div class="row"><span>Slippage</span><span id="qpSlip">0.30%</span></div>
         </div>
 
+        <!-- Swap Result Banner -->
+        <div id="swapResult" style="display:none;"></div>
         <button class="btn-swap" id="btnSwap" onclick="doSwap()">Connect Wallet to Trade</button>
       </div>
     </div>
@@ -319,7 +322,780 @@
 
 </div>
 
+<!-- Footer: Contract Info -->
+<div style="text-align:center;padding:16px 0 32px;border-top:1px solid var(--border);font-size:0.7rem;color:var(--muted);">
+  <div id="contractInfoFooter"></div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.5/ethers.umd.min.js"></script>
-<script src="scripts.js"></script>
+<script>
+// ─── StableSwapDEX v6 ABI ───
+var EMBEDDED_CONTRACT = "0x61943D78c488755d7126d86056B54bF55859039D";
+var EMBEDDED_ABI = [{"type":"constructor","inputs":[{"name":"_usdc","type":"address","internalType":"address"}],"stateMutability":"nonpayable"},{"type":"function","name":"BPS","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"MAX_A","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"MAX_FEE","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"MIN_A","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"N_COINS","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"addLiquidity","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"amount0","type":"uint256","internalType":"uint256"},{"name":"amount1","type":"uint256","internalType":"uint256"},{"name":"minShares","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"shares","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"addLiquiditySingle","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"amountUSDC","type":"uint256","internalType":"uint256"},{"name":"minShares","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"shares","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"claimFees","inputs":[{"name":"id","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"createPool","inputs":[{"name":"_token1","type":"address","internalType":"address"},{"name":"_decimals1","type":"uint8","internalType":"uint8"},{"name":"_A","type":"uint256","internalType":"uint256"},{"name":"_swapFee","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"feeCollector","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"getAmountOut","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"tokenIn","type":"address","internalType":"address"},{"name":"amountIn","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"amountOut","type":"uint256","internalType":"uint256"},{"name":"fee","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"getLpShares","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"lp","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"getLpToken","inputs":[{"name":"id","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"getPool","inputs":[{"name":"id","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"token1","type":"address","internalType":"address"},{"name":"decimals1","type":"uint8","internalType":"uint8"},{"name":"A","type":"uint256","internalType":"uint256"},{"name":"swapFee","type":"uint256","internalType":"uint256"},{"name":"reserve0","type":"uint256","internalType":"uint256"},{"name":"reserve1","type":"uint256","internalType":"uint256"},{"name":"liquidityTotal","type":"uint256","internalType":"uint256"},{"name":"active","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"lpFeeDebt","inputs":[{"name":"","type":"uint256","internalType":"uint256"},{"name":"","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"lpToken","inputs":[{"name":"","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"address","internalType":"contract LPToken"}],"stateMutability":"view"},{"type":"function","name":"owner","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"pendingFees","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"lp","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"poolCount","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"pools","inputs":[{"name":"","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"token1","type":"address","internalType":"address"},{"name":"decimals1","type":"uint8","internalType":"uint8"},{"name":"A","type":"uint256","internalType":"uint256"},{"name":"swapFee","type":"uint256","internalType":"uint256"},{"name":"adminFee","type":"uint256","internalType":"uint256"},{"name":"reserve0","type":"uint256","internalType":"uint256"},{"name":"reserve1","type":"uint256","internalType":"uint256"},{"name":"liquidityTotal","type":"uint256","internalType":"uint256"},{"name":"active","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"removeLiquidity","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"shares","type":"uint256","internalType":"uint256"},{"name":"minAmount0","type":"uint256","internalType":"uint256"},{"name":"minAmount1","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"amount0","type":"uint256","internalType":"uint256"},{"name":"amount1","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"setFeeCollector","inputs":[{"name":"_feeCollector","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"swap","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"tokenIn","type":"address","internalType":"address"},{"name":"amountIn","type":"uint256","internalType":"uint256"},{"name":"minAmountOut","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"amountOut","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"tokenToPid","inputs":[{"name":"","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"transferOwnership","inputs":[{"name":"newOwner","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"tvl","inputs":[{"name":"id","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"usdc","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"event","name":"FeesClaimed","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"lp","type":"address","indexed":true,"internalType":"address"},{"name":"amount","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"LiquidityAdded","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"provider","type":"address","indexed":true,"internalType":"address"},{"name":"amount0","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"amount1","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"shares","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"LiquidityRemoved","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"provider","type":"address","indexed":true,"internalType":"address"},{"name":"amount0","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"amount1","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"shares","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"PoolCreated","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"token1","type":"address","indexed":true,"internalType":"address"},{"name":"A","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"fee","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"Swapped","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"user","type":"address","indexed":true,"internalType":"address"},{"name":"tokenIn","type":"address","indexed":false,"internalType":"address"},{"name":"tokenOut","type":"address","indexed":false,"internalType":"address"},{"name":"amountIn","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"amountOut","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"fee","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"error","name":"AlreadyClaimed","inputs":[]},{"type":"error","name":"InsufficientLiquidity","inputs":[]},{"type":"error","name":"InvalidAmount","inputs":[]},{"type":"error","name":"InvalidPair","inputs":[]},{"type":"error","name":"InvalidToken","inputs":[]},{"type":"error","name":"NotOwner","inputs":[]},{"type":"error","name":"OverflowCheck","inputs":[]},{"type":"error","name":"PoolExists","inputs":[]},{"type":"error","name":"SlippageExceeded","inputs":[]}];
+
+// ─── LPToken ABI ───
+var LP_TOKEN_ABI = ["function name() view returns (string)","function symbol() view returns (string)","function decimals() view returns (uint8)","function totalSupply() view returns (uint256)","function balanceOf(address) view returns (uint256)","function approve(address,uint256) returns (bool)","function transfer(address,uint256) returns (bool)","function allowance(address,address) view returns (uint256)"];
+// ─── Token Registry ───
+var TOKENS = [
+  { symbol: "USDC",  name: "USD Coin",  icon: "u", cls: "usdc", decimals: 6, address: "0x3600000000000000000000000000000000000000" },
+  { symbol: "EURC",  name: "Euro Coin", icon: "e", cls: "eurc", decimals: 6, address: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" },
+];
+
+var ARC = { chainId: 5042002, rpc: "https://rpc.testnet.arc.network", explorer: "https://testnet.arcscan.app/tx/" };
+
+// ─── State ───
+var provider = null, signer = null, userAddress = null, contract = null, readProvider = null;
+var selectedFrom = TOKENS[0], selectedTo = TOKENS[1];
+var tokenModalMode = "from";
+var txIdCounter = 0;
+var realPools = [];
+var pendingSwapResult = null;  // stores last swap result for display
+
+// ─── Helpers ───
+function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function fmtUsd(n) {
+  if (n >= 1e6) return "$" + (n/1e6).toFixed(2) + "M";
+  if (n >= 1e3) return "$" + (n/1e3).toFixed(1) + "K";
+  return "$" + n.toFixed(2);
+}
+function fmtRate(n) { return n >= 1000 ? n.toFixed(2) : n >= 1 ? n.toFixed(4) : n.toFixed(6); }
+
+// ─── Init ───
+function init() {
+  try {
+    initNav(); initSubpanelTabs();
+    CONTRACT_ADDRESS = EMBEDDED_CONTRACT;
+    CONTRACT_ABI = EMBEDDED_ABI;
+    if (signer && CONTRACT_ADDRESS && CONTRACT_ABI) contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    loadPools();
+    setTimeout(updateQuote, 500);
+    document.getElementById("inputAmount").addEventListener("input", updateQuote);
+    document.getElementById("slippageInput").addEventListener("input", function() {
+      if (this) document.getElementById("qpSlip").textContent = this.value + "%";
+    });
+    showContractInfo();
+  } catch(e) {
+    console.error("init error:", e);
+  }
+}
+
+function showContractInfo() {
+  var el = document.getElementById("contractInfoFooter");
+  if (el && CONTRACT_ADDRESS) {
+    var base = ARC.explorer.replace('/tx/', '/address/');
+    el.innerHTML = 'Contract: <a class="tx-link" href="' + base + CONTRACT_ADDRESS + '" target="_blank">' + CONTRACT_ADDRESS + '</a>';
+  }
+}
+
+// ─── Navigation ───
+function initNav() {
+  document.querySelectorAll("nav a").forEach(function(a) {
+    a.addEventListener("click", function() {
+      document.querySelectorAll("nav a").forEach(function(x) { x.classList.remove("active"); });
+      a.classList.add("active");
+      var panel = a.getAttribute("data-panel");
+      if (panel === "swap") {
+        document.querySelector(".swap-panel").style.display = "block";
+        document.querySelector(".info-panel").style.display = "block";
+      } else {
+        document.querySelector(".swap-panel").style.display = "none";
+        document.querySelector(".info-panel").style.display = "block";
+        showSubpanel(panel);
+      }
+    });
+  });
+}
+
+function initSubpanelTabs() {
+  document.querySelectorAll(".section-tabs button").forEach(function(b) {
+    b.addEventListener("click", function() {
+      document.querySelectorAll(".section-tabs button").forEach(function(x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      showSubpanel(b.getAttribute("data-subpanel"));
+    });
+  });
+}
+
+function showSubpanel(name) {
+  document.querySelectorAll(".panel").forEach(function(p) { p.classList.remove("active"); });
+  var el = document.getElementById("sub" + name.charAt(0).toUpperCase() + name.slice(1));
+  if (el) el.classList.add("active");
+}
+
+// ─── Token Modal ───
+function openTokenModal(mode) {
+  tokenModalMode = mode;
+  var list = document.getElementById("tokenList");
+  list.innerHTML = "";
+  for (var i = 0; i < TOKENS.length; i++) {
+    var t = TOKENS[i];
+    var div = document.createElement("div");
+    div.className = "token-option";
+    div.innerHTML = '<span class="token-icon ' + t.cls + '">' + esc(t.icon) + '</span><div><div class="symbol">' + esc(t.symbol) + '</div><div class="name">' + esc(t.name) + '</div></div>';
+    div.onclick = function(tok) { return function() { selectToken(tok); }; }(t);
+    list.appendChild(div);
+  }
+  document.getElementById("tokenModal").classList.add("show");
+  document.getElementById("tokenModal").onclick = function(e) {
+    if (e.target === this) this.classList.remove("show");
+  };
+}
+
+function selectToken(token) {
+  if (tokenModalMode === "from") {
+    if (token.symbol === selectedTo.symbol) { alert("Cannot swap same token."); return; }
+    selectedFrom = token;
+  } else {
+    if (token.symbol === selectedFrom.symbol) { alert("Cannot swap same token."); return; }
+    selectedTo = token;
+  }
+  updateTokenUI();
+  document.getElementById("tokenModal").classList.remove("show");
+  updateQuote();
+}
+
+function swapTokens() {
+  var tmp = selectedFrom; selectedFrom = selectedTo; selectedTo = tmp;
+  updateTokenUI();
+  updateQuote();
+}
+
+function updateTokenUI() {
+  document.getElementById("tokenFromLabel").textContent = selectedFrom.symbol;
+  document.getElementById("tokenToLabel").textContent = selectedTo.symbol;
+  document.getElementById("btnTokenFrom").querySelector(".token-icon").className = "token-icon " + selectedFrom.cls;
+  document.getElementById("btnTokenFrom").querySelector(".token-icon").textContent = selectedFrom.icon;
+  document.getElementById("btnTokenTo").querySelector(".token-icon").className = "token-icon " + selectedTo.cls;
+  document.getElementById("btnTokenTo").querySelector(".token-icon").textContent = selectedTo.icon;
+}
+
+function setPercent(pct) {
+  document.getElementById("inputAmount").value = String(10000 * pct / 100);
+  updateQuote();
+}
+
+// ─── On-chain Pool Loading ───
+function loadPools() {
+  if (!CONTRACT_ABI || !CONTRACT_ABI.length) { renderEmptyPools(); return; }
+  if (!readProvider) readProvider = new ethers.JsonRpcProvider(ARC.rpc);
+  var c = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, readProvider);
+
+  c.poolCount().then(function(count) {
+    if (count === 0n) { renderEmptyPools(); return; }
+    var promises = [];
+    for (var i = 1; i <= Number(count); i++) {
+      promises.push(c.pools(i));
+    }
+    return Promise.all(promises);
+  }).then(function(pools) {
+    if (!pools || !pools.length) return;
+    realPools = pools;
+    renderPoolTable(pools);
+    updateStats(pools);
+    initTicker(pools);
+    // Auto-select first pool so LP buttons appear
+    selectPool(1);
+  }).catch(function(e) {
+    console.log("Pool load error:", e.message);
+    renderEmptyPools();
+  });
+}
+
+function renderEmptyPools() {
+  document.getElementById("poolTableBody").innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">No pools yet</td></tr>';
+  document.getElementById("statTvl").textContent = "$0";
+  document.getElementById("statVol").textContent = "$0";
+  document.getElementById("statSlip").textContent = "—";
+  document.getElementById("statPairs").textContent = "0 pairs";
+}
+
+function calcAPR(pool) {
+  // Estimate APR: assumes avg daily volume = 0.5x TVL (conservative for stable pool)
+  var fee = Number(pool.swapFee) / 10000;
+  var adminShare = Number(pool.adminFee) / 10000;
+  if (fee === 0) return "—";
+  var dailyVolRatio = 0.5;
+  var apr = dailyVolRatio * fee * (1 - adminShare) * 365 * 100;
+  if (apr < 0.01) return "<0.01%";
+  if (apr > 100) return ">100%";
+  return apr.toFixed(2) + "%";
+}
+
+function renderPoolTable(pools) {
+  var body = document.getElementById("poolTableBody");
+  var html = "";
+  for (var i = 0; i < pools.length; i++) {
+    var p = pools[i];
+    var r0 = parseFloat(ethers.formatUnits(p.reserve0, 6));
+    var r1 = parseFloat(ethers.formatUnits(p.reserve1, 6));
+    var tvl = r0 + r1;
+    html += '<tr onclick="selectPool(' + (i+1) + ')">';
+    html += '<td><div class="pool-pair"><div class="icons"><span class="token-icon usdc">u</span><span class="token-icon eurc">e</span></div><span class="name">USDC/EURC</span></div></td>';
+    html += '<td>' + fmtUsd(tvl) + '</td>';
+    html += '<td>' + fmtUsd(r0) + ' / ' + fmtUsd(r1) + '</td>';
+    html += '<td><span class="badge fee">' + p.swapFee.toString() + ' bps</span></td>';
+    html += '<td><span class="trend-up">' + calcAPR(p) + '</span></td>';
+    html += '<td>' + (r0 > 0 ? (r1 / r0 * 100).toFixed(1) : "0") + '%</td>';
+    html += '</tr>';
+  }
+  body.innerHTML = html;
+}
+
+var selectedPoolIdx = -1;
+
+function selectPool(poolId) {
+  selectedPoolIdx = poolId;
+  var p = realPools[poolId - 1];
+  if (!p) return;
+  var r0 = parseFloat(ethers.formatUnits(p.reserve0, 6));
+  var r1 = parseFloat(ethers.formatUnits(p.reserve1, 6));
+  var tvl = r0 + r1;
+
+  document.getElementById("lpContent").innerHTML = `
+    <div style="font-size:0.85rem;font-weight:500;margin-bottom:6px;">USDC/EURC Pool</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;">
+      TVL: ${fmtUsd(tvl)} · ${fmtUsd(r0)} USDC / ${fmtUsd(r1)} EURC · Fee: ${p.swapFee} bps
+    </div>
+    <div id="lpTokenInfo" style="font-size:0.68rem;color:var(--accent);margin-bottom:6px;">Loading LP token...</div>
+    <div class="swap-input-group">
+      <label>Deposit USDC</label>
+      <div class="swap-input-row">
+        <input id="lpAmount" type="number" value="1000" min="1" oninput="updateLpQuote(${poolId})" />
+        <span class="token-select" style="cursor:default;"><span class="token-icon usdc">u</span> USDC</span>
+      </div>
+    </div>
+    <div class="swap-input-group" style="opacity:0.8;">
+      <label>EURC needed (auto-computed)</label>
+      <div class="swap-input-row">
+        <input id="lpEurcAmount" type="text" readonly style="font-size:1rem;" />
+        <span class="token-select" style="cursor:default;"><span class="token-icon eurc">e</span> EURC</span>
+      </div>
+    </div>
+    <div id="lpBalanceInfo" style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;"></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn-swap" style="width:auto;padding:8px 20px;font-size:0.8rem;margin-top:0;" onclick="doAddLP(${poolId})">Add Liquidity</button>
+      ${userAddress ? '<button class="btn-swap" style="width:auto;padding:8px 20px;font-size:0.8rem;margin-top:0;background:linear-gradient(135deg,#ef4444,#dc2626);" onclick="doRemoveLP()">Remove LP</button>' : ''}
+    </div>
+  `;
+  updateLpQuote(poolId);
+  fetchLpTokenInfo(poolId);
+  document.getElementById("lpSection").scrollIntoView({ behavior: "smooth" });
+}
+
+function fetchLpTokenInfo(poolId) {
+  var infoEl = document.getElementById("lpTokenInfo");
+  if (!infoEl) return;
+  if (!CONTRACT_ABI || !CONTRACT_ADDRESS) { infoEl.innerHTML = ""; return; }
+  var rp = readProvider || new ethers.JsonRpcProvider(ARC.rpc);
+  var c = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rp);
+  c.getLpToken(poolId).then(function(lpAddr) {
+    if (lpAddr === "0x0000000000000000000000000000000000000000") { infoEl.innerHTML = ""; return; }
+    var lp = new ethers.Contract(lpAddr, LP_TOKEN_ABI, rp);
+    return Promise.all([
+      lp.name(), lp.symbol(), lp.totalSupply(),
+      userAddress ? lp.balanceOf(userAddress) : Promise.resolve(0n)
+    ]).then(function(r) {
+      var total = parseFloat(ethers.formatUnits(r[2], 6)).toFixed(2);
+      var bal = userAddress ? parseFloat(ethers.formatUnits(r[3], 6)).toFixed(2) : "—";
+      infoEl.innerHTML = `<span style="opacity:0.8;">LP Token</span>: <a class="tx-link" href="${ARC.explorer.replace('/tx/','/address/')}${lpAddr}" target="_blank">${lpAddr.slice(0,14)}...${lpAddr.slice(-6)}</a> · <span style="opacity:0.8;">Supply</span>: ${total} · <span style="opacity:0.8;">Your Balance</span>: ${bal}`;
+    });
+  }).catch(function() {
+    if (infoEl) infoEl.innerHTML = "";
+  });
+}
+
+// ─── LP Quote ───
+function updateLpQuote(poolId) {
+  var el = document.getElementById("lpAmount");
+  var amt = parseFloat(el ? el.value : "1000") || 0;
+  var pool = realPools[poolId - 1];
+  var eurcNeeded = 0;
+  if (pool && pool.reserve0 > 0n) {
+    eurcNeeded = parseFloat(ethers.formatUnits(
+      ethers.parseUnits(String(amt), 6) * pool.reserve1 / pool.reserve0, 6
+    ));
+  }
+  var eurcEl = document.getElementById("lpEurcAmount");
+  if (eurcEl) eurcEl.value = eurcNeeded.toFixed(2);
+
+  if (userAddress) {
+    var info = document.getElementById("lpBalanceInfo");
+    info.textContent = "Checking balances...";
+    var balP = new ethers.JsonRpcProvider(ARC.rpc);
+    var usdcC = new ethers.Contract(TOKENS[0].address, ["function balanceOf(address) view returns (uint256)"], balP);
+    var eurcC = new ethers.Contract(TOKENS[1].address, ["function balanceOf(address) view returns (uint256)"], balP);
+    Promise.all([usdcC.balanceOf(userAddress), eurcC.balanceOf(userAddress)]).then(function(bals) {
+      var usdcBal = parseFloat(ethers.formatUnits(bals[0], 6));
+      var eurcBal = parseFloat(ethers.formatUnits(bals[1], 6));
+      var okU = usdcBal >= amt;
+      var okE = eurcBal >= eurcNeeded;
+      var parts = ["USDC: " + (okU ? "✅ " : "❌ ") + usdcBal.toFixed(2), "EURC: " + (okE ? "✅ " : "❌ ") + eurcBal.toFixed(2)];
+      if (!okU) parts.push("(need " + amt.toFixed(2) + ")");
+      if (!okE) parts.push("(need " + eurcNeeded.toFixed(2) + ")");
+      info.innerHTML = parts.join(" · ");
+      info.style.color = (okU && okE) ? "var(--green)" : "var(--yellow)";
+    }).catch(function() {
+      info.textContent = "Could not check balances.";
+    });
+  }
+}
+
+// ─── Stats ───
+function updateStats(pools) {
+  if (!pools || !pools.length) {
+    document.getElementById("statTvl").textContent = "$0";
+    document.getElementById("statVol").textContent = "$0";
+    document.getElementById("statSlip").textContent = "—";
+    document.getElementById("statPairs").textContent = "0 pairs";
+    return;
+  }
+  var totalTvl = 0;
+  for (var i = 0; i < pools.length; i++) {
+    totalTvl += parseFloat(ethers.formatUnits(pools[i].reserve0, 6)) + parseFloat(ethers.formatUnits(pools[i].reserve1, 6));
+  }
+  document.getElementById("statTvl").textContent = fmtUsd(totalTvl);
+  document.getElementById("statVol").textContent = "—";
+  document.getElementById("statSlip").textContent = "0.72 bps";
+  document.getElementById("statPairs").textContent = pools.length + " pair" + (pools.length > 1 ? "s" : "");
+}
+
+// ─── Ticker ───
+function initTicker(pools) {
+  if (!pools || !pools.length) {
+    document.getElementById("tickerInner").innerHTML = '<span class="ticker-item">USDC/EURC <span class="up">0.0000</span></span>';
+    return;
+  }
+  var p = pools[0];
+  var r0 = parseFloat(ethers.formatUnits(p.reserve0, 6));
+  var r1 = parseFloat(ethers.formatUnits(p.reserve1, 6));
+  var rate0 = r0 > 0 ? r1 / r0 : 0;
+  var rate1 = r1 > 0 ? 1 / rate0 : 0;
+  var html = "";
+  for (var r = 0; r < 3; r++) {
+    html += '<span class="ticker-item">USDC/EURC <span class="up">' + fmtRate(rate1) + '</span></span>';
+    html += '<span class="ticker-item">EURC/USDC <span class="up">' + fmtRate(rate0) + '</span></span>';
+  }
+  document.getElementById("tickerInner").innerHTML = html;
+}
+
+// ─── Quote ───
+function updateQuote() {
+  var amtStr = document.getElementById("inputAmount").value;
+  var amt = parseFloat(amtStr) || 0;
+  if (!CONTRACT_ABI.length || !readProvider) {
+    if (!readProvider) readProvider = new ethers.JsonRpcProvider(ARC.rpc);
+    fallbackQuote(amt);
+    return;
+  }
+  var c = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, readProvider);
+  var tokenIn = selectedFrom.address;
+  var amountIn = ethers.parseUnits(amtStr || "0", selectedFrom.decimals);
+  if (amountIn <= 0n) { fallbackQuote(amt); return; }
+
+  c.getAmountOut(1, tokenIn, amountIn).then(function(result) {
+    var out = parseFloat(ethers.formatUnits(result[0], selectedTo.decimals));
+    var fee = parseFloat(ethers.formatUnits(result[1], selectedTo.decimals));
+    var rate = amt > 0 ? out / amt : 0;
+    document.getElementById("outputAmount").value = out.toFixed(6);
+    document.getElementById("rateDisplay").textContent = "1 " + selectedFrom.symbol + " = " + fmtRate(rate) + " " + selectedTo.symbol;
+    document.getElementById("qpRate").textContent = "1 " + selectedFrom.symbol + " = " + fmtRate(rate) + " " + selectedTo.symbol;
+    document.getElementById("qpFee").textContent = fee.toFixed(4) + " " + selectedTo.symbol;
+    document.getElementById("qpOutput").textContent = out.toFixed(6) + " " + selectedTo.symbol;
+    document.getElementById("qpRoute").textContent = selectedFrom.symbol + " → USDC/EURC Pool";
+  }).catch(function(e) {
+    var msg = e.reason || e.message || "";
+    if (msg.includes("InsufficientLiquidity")) {
+      alert("Pool does not have enough liquidity for this trade. Try a smaller amount.");
+    } else {
+      fallbackQuote(amt);
+    }
+  });
+}
+
+function fallbackQuote(amt) {
+  var rate = selectedFrom.symbol === "USDC" ? 0.96 : 1.04;
+  var out = amt * rate;
+  document.getElementById("outputAmount").value = amt > 0 ? out.toFixed(6) : "";
+  document.getElementById("rateDisplay").textContent = "1 " + selectedFrom.symbol + " = " + fmtRate(rate || 1) + " " + selectedTo.symbol;
+  document.getElementById("qpRate").textContent = "1 " + selectedFrom.symbol + " = " + fmtRate(rate || 1) + " " + selectedTo.symbol;
+  document.getElementById("qpFee").textContent = fmtUsd(out * 0.0004);
+  document.getElementById("qpOutput").textContent = amt > 0 ? (out - out * 0.0004).toFixed(6) + " " + selectedTo.symbol : "—";
+  document.getElementById("qpRoute").textContent = selectedFrom.symbol + " → " + selectedTo.symbol;
+}
+
+// ─── Wallet Connect ───
+document.getElementById("btnConnect").onclick = function() {
+  var w = null, wn = "Wallet";
+  if (window.ethereum) {
+    if (window.ethereum.isMetaMask) wn = "MetaMask";
+    else if (window.ethereum.isOKXWallet) wn = "OKX";
+    w = window.ethereum;
+  } else if (window.okxwallet) { w = window.okxwallet; wn = "OKX"; }
+  if (!w) { alert("Install MetaMask or OKX Wallet."); return; }
+
+  provider = new ethers.BrowserProvider(w, "any");
+  provider.getSigner().then(function(s) {
+    signer = s;
+    return signer.getAddress();
+  }).then(function(addr) {
+    userAddress = addr;
+    document.getElementById("btnConnect").textContent = addr.slice(0,6) + "..." + addr.slice(-4);
+    document.getElementById("walletStatus").textContent = wn + " · Connected";
+    document.getElementById("btnSwap").textContent = "Swap";
+    document.getElementById("btnSwap").disabled = false;
+
+    if (CONTRACT_ABI && CONTRACT_ABI.length && CONTRACT_ADDRESS) {
+      contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    }
+
+    return provider.send("wallet_switchEthereumChain", [{ chainId: "0x" + ARC.chainId.toString(16) }]).catch(function(e) {
+      if (e.code === 4902) {
+        return provider.send("wallet_addEthereumChain", [{
+          chainId: "0x" + ARC.chainId.toString(16), chainName: "Arc Testnet",
+          rpcUrls: [ARC.rpc], nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 6 }
+        }]);
+      }
+    });
+  }).then(function() {
+    updateMyPositions();
+    updateLpQuote(selectedPoolIdx > 0 ? selectedPoolIdx : 1);
+  }).catch(function(e) {
+    alert("Connect failed: " + (e.message || "unknown").slice(0, 60));
+  });
+};
+
+// ─── Swap Result Display ───
+function showSwapResult(amtIn, symIn, amtOut, symOut, txHash) {
+  // Hide the quote preview, show result
+  var el = document.getElementById("swapResult");
+  if (!el) return;
+  el.style.display = "block";
+  el.innerHTML = `
+    <div style="background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04)); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; padding: 14px; margin-top: 8px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <span style="font-size:1rem;">✅</span>
+        <span style="font-weight:600;font-size:0.85rem;color:var(--green);">Swap Successful</span>
+      </div>
+      <div style="font-size:0.85rem;margin-bottom:4px;">
+        <span style="color:var(--text);font-weight:500;">${amtIn.toFixed(2)} ${symIn}</span>
+        <span style="color:var(--muted);"> → </span>
+        <span style="color:var(--green);font-weight:600;">${amtOut.toFixed(6)} ${symOut}</span>
+      </div>
+      <div style="font-size:0.7rem;color:var(--muted);">Contract: <a class="tx-link" href="${ARC.explorer.replace('/tx/','/address/')}${CONTRACT_ADDRESS}" target="_blank">${CONTRACT_ADDRESS.slice(0,18)}...</a></div>
+      <div style="font-size:0.7rem;color:var(--muted);">
+        TX: <a class="tx-link" href="${ARC.explorer}${txHash}" target="_blank">${txHash.slice(0,18)}...</a>
+      </div>
+    </div>
+  `;
+  // Auto-hide after 15 seconds
+  setTimeout(function() {
+    if (el) { el.style.display = "none"; }
+  }, 15000);
+}
+
+function showLPResult(amtUSDC, amtEURC, txHash, lpShares, pct) {
+  var el = document.getElementById("swapResult");
+  if (!el) return;
+  el.style.display = "block";
+  el.innerHTML = `
+    <div style="background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04)); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; padding: 14px; margin-top: 8px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <span style="font-size:1rem;">✅</span>
+        <span style="font-weight:600;font-size:0.85rem;color:var(--green);">LP Added Successfully</span>
+      </div>
+      <div style="font-size:0.85rem;margin-bottom:4px;">
+        <span style="color:var(--text);font-weight:500;">${amtUSDC.toFixed(2)} USDC</span>
+        <span style="color:var(--muted);"> + </span>
+        <span style="color:var(--text);font-weight:500;">${amtEURC.toFixed(4)} EURC</span>
+      </div>
+      <div style="font-size:0.8rem;margin-bottom:4px;color:var(--accent);">
+        LP Shares: ${lpShares.toLocaleString()} · ${pct}% of pool
+      <div style="font-size:0.7rem;color:var(--muted);">Contract: <a class="tx-link" href="${ARC.explorer.replace('/tx/','/address/')}${CONTRACT_ADDRESS}" target="_blank">${CONTRACT_ADDRESS.slice(0,18)}...</a></div>
+      <div style="font-size:0.7rem;color:var(--muted);">
+        TX: <a class="tx-link" href="${ARC.explorer}${txHash}" target="_blank">${txHash.slice(0,18)}...</a>
+      </div>
+    </div>
+  `;
+  setTimeout(function() { if (el) el.style.display = "none"; }, 20000);
+}
+
+function hideSwapResult() {
+  var el = document.getElementById("swapResult");
+  if (el) { el.style.display = "none"; el.innerHTML = ""; }
+}
+
+// ─── Swap ───
+function doSwap() {
+  if (!userAddress) { alert("Connect wallet first."); return; }
+  if (!contract || !CONTRACT_ADDRESS) { alert("Contract not loaded."); return; }
+
+  hideSwapResult();
+
+  var amtStr = document.getElementById("inputAmount").value;
+  var amt = parseFloat(amtStr) || 0;
+  if (amt <= 0) { alert("Enter an amount."); return; }
+
+  // Disable swap button during transaction
+  var btn = document.getElementById("btnSwap");
+  btn.disabled = true;
+  btn.textContent = "Swapping...";
+
+  var tokenIn = selectedFrom.address;
+  var tokenOut = selectedTo.address;
+  var amountIn = ethers.parseUnits(amtStr, selectedFrom.decimals);
+  var slipPct = parseFloat(document.getElementById("slippageInput").value) / 100;
+  var poolId = 1;
+  var estOutAmount = 0;
+
+  contract.getAmountOut(poolId, tokenIn, amountIn).then(function(quote) {
+    var expectedOut = quote[0];
+    var minOut = expectedOut * BigInt(Math.floor((1 - slipPct) * 1000)) / 1000n;
+    estOutAmount = parseFloat(ethers.formatUnits(expectedOut, selectedTo.decimals));
+
+    // Check and set allowance
+    var erc20 = new ethers.Contract(tokenIn, [
+      "function allowance(address,address) view returns (uint256)",
+      "function approve(address,uint256) returns (bool)"
+    ], signer);
+
+    return erc20.allowance(userAddress, CONTRACT_ADDRESS).then(function(allow) {
+      if (allow < amountIn) {
+        return erc20.approve(CONTRACT_ADDRESS, amountIn).then(function(tx) {
+          txOpPending("Approve " + selectedFrom.symbol, tx);
+          return tx.wait();
+        });
+      }
+    }).then(function() {
+      return contract.swap(poolId, tokenIn, amountIn, minOut);
+    });
+  }).then(function(tx) {
+    // tx is TransactionResponse
+    var txHash = tx.hash || "";
+    // Wait for confirmation, showing pending
+    txOpPending("Swap " + amt + " " + selectedFrom.symbol, tx);
+    return tx.wait().then(function(receipt) {
+      return { hash: txHash, receipt: receipt };
+    });
+  }).then(function(result) {
+    // Swap confirmed! Show the result
+    txOpConfirmed(result.hash);
+    updateMyPositions();
+    // Reload pool data
+    loadPools();
+    // Show success result banner
+    showSwapResult(amt, selectedFrom.symbol, estOutAmount, selectedTo.symbol, result.hash);
+  }).catch(function(e) {
+    var msg = (e.reason || e.message || "").slice(0, 100);
+    if (msg.includes("InsufficientLiquidity")) {
+      alert("Not enough liquidity in pool for this trade.");
+    } else if (msg.includes("SlippageExceeded")) {
+      alert("Price moved too much. Increase slippage tolerance or try again.");
+    } else if (msg.includes("user rejected") || msg.includes("denied")) {
+      alert("Transaction rejected.");
+    } else if (msg.includes("insufficient funds")) {
+      alert("Insufficient balance to complete this swap.");
+    } else {
+      alert("Swap failed: " + msg);
+    }
+  }).finally(function() {
+    btn.disabled = false;
+    btn.textContent = "Swap";
+  });
+}
+
+// ─── TX Log (simplified) ───
+function txOpPending(action, tx) {
+  var logEl = document.getElementById("txLog");
+  if (logEl.querySelector(".muted") && logEl.children.length <= 1) logEl.innerHTML = "";
+  txIdCounter++;
+  var row = document.createElement("div");
+  row.className = "tx-row";
+  row.id = "txRow_" + txIdCounter;
+  var txHash = "";
+  if (tx && tx.hash) {
+    txHash = tx.hash;
+    row.innerHTML = '<span class="tx-time">[' + new Date().toLocaleTimeString() + ']</span> ' + esc(action) + ' - <a class="tx-link" href="' + ARC.explorer + txHash + '" target="_blank">' + txHash.slice(0,12) + '...</a> <span class="tx-pending">confirming...</span>';
+  } else {
+    row.innerHTML = '<span class="tx-time">[' + new Date().toLocaleTimeString() + ']</span> ' + esc(action) + ' - <span class="tx-pending">pending...</span>';
+  }
+  logEl.appendChild(row);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function txOpConfirmed(txHash) {
+  // Update all "confirming..." rows with matching hash
+  var rows = document.getElementById("txLog").querySelectorAll(".tx-row");
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (r.innerHTML.includes(txHash.slice(0,12)) || r.innerHTML.includes("confirming...")) {
+      r.className = "tx-row tx-ok";
+      r.innerHTML = r.innerHTML.replace('<span class="tx-pending">confirming...</span>', '<span class="tx-ok">confirmed ✅</span>');
+      break;
+    }
+  }
+}
+
+function txOpFailed(txHash) {
+  var rows = document.getElementById("txLog").querySelectorAll(".tx-row");
+  for (var i = rows.length - 1; i >= 0; i--) {
+    var r = rows[i];
+    if (r.innerHTML.includes("confirming...") || r.innerHTML.includes("pending...")) {
+      r.className = "tx-row tx-fail";
+      r.innerHTML = r.innerHTML.replace(/<span class="tx-(pending|ok)">.*?<\/span>/, '<span class="tx-fail">failed ✗</span>');
+      break;
+    }
+  }
+}
+
+// ─── LP (two-sided) ───
+function doAddLP(poolId) {
+  if (!userAddress) { alert("Connect wallet first."); return; }
+  if (!contract || !CONTRACT_ADDRESS) { alert("Contract not loaded."); return; }
+  var amt = parseFloat(document.getElementById("lpAmount").value) || 0;
+  if (amt <= 0) { alert("Enter amount."); return; }
+
+  var pool = realPools[poolId - 1];
+  if (!pool) { alert("Pool not found."); return; }
+
+  var amountUSDC = ethers.parseUnits(String(amt), 6);
+  var amountEURC = pool.reserve0 > 0n ? amountUSDC * pool.reserve1 / pool.reserve0 : amountUSDC;
+
+  // Check EURC balance
+  var balP = new ethers.JsonRpcProvider(ARC.rpc);
+  var eurcC = new ethers.Contract(TOKENS[1].address, ["function balanceOf(address) view returns (uint256)"], balP);
+  eurcC.balanceOf(userAddress).then(function(eurcBal) {
+    if (eurcBal < amountEURC) {
+      alert("Insufficient EURC. First swap some USDC for EURC, then add liquidity.");
+      return;
+    }
+    approveAndAdd(poolId, amountUSDC, amountEURC);
+  }).catch(function() {
+    alert("Could not check EURC balance.");
+  });
+}
+
+// ─── LP (single-sided, USDC only) ───
+function approveAndAdd(poolId, amountUSDC, amountEURC) {
+  var erc20 = new ethers.Contract(TOKENS[0].address, ["function approve(address,uint256) returns (bool)"], signer);
+  var erc21 = new ethers.Contract(TOKENS[1].address, ["function approve(address,uint256) returns (bool)"], signer);
+
+  var prom = [];
+  var c0 = new ethers.Contract(TOKENS[0].address, ["function allowance(address,address) view returns (uint256)"], signer);
+  var c1 = new ethers.Contract(TOKENS[1].address, ["function allowance(address,address) view returns (uint256)"], signer);
+
+  c0.allowance(userAddress, CONTRACT_ADDRESS).then(function(a0) {
+    if (a0 < amountUSDC) prom.push(erc20.approve(CONTRACT_ADDRESS, amountUSDC).then(function(tx) {
+      txOpPending("Approve USDC", tx); return tx.wait();
+    }));
+    return c1.allowance(userAddress, CONTRACT_ADDRESS);
+  }).then(function(a1) {
+    if (a1 < amountEURC) prom.push(erc21.approve(CONTRACT_ADDRESS, amountEURC).then(function(tx) {
+      txOpPending("Approve EURC", tx); return tx.wait();
+    }));
+    return Promise.all(prom);
+  }).then(function() {
+    return contract.addLiquidity(poolId, amountUSDC, amountEURC, 0n);
+  }).then(function(tx) {
+    var txHash = tx.hash || "";
+    txOpPending("Add LP USDC/EURC", tx);
+    return tx.wait().then(function() { return txHash; });
+  }).then(function(txHash) {
+    txOpConfirmed(txHash);
+    // Reload pools then query LP shares
+    loadPools();
+    setTimeout(function() {
+      if (readProvider && CONTRACT_ADDRESS) {
+        var c = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, readProvider);
+        c.getLpShares(poolId, userAddress).then(function(shares) {
+          var liqTotal = realPools[poolId-1] ? realPools[poolId-1].liquidityTotal : 0n;
+          var pct = liqTotal > 0n ? (Number(shares) / Number(liqTotal) * 100).toFixed(4) : "0";
+          var amt0 = parseFloat(ethers.formatUnits(amountUSDC, 6));
+          var amt1 = parseFloat(ethers.formatUnits(amountEURC, 6));
+          showLPResult(amt0, amt1, txHash, Number(shares), pct);
+        }).catch(function() {
+          var amt0 = parseFloat(ethers.formatUnits(amountUSDC, 6));
+          var amt1 = parseFloat(ethers.formatUnits(amountEURC, 6));
+          showLPResult(amt0, amt1, txHash, 0, "0");
+        });
+      }
+    }, 1000);
+  }).catch(function(e) {
+    var msg = (e.reason || e.message || "").slice(0, 80);
+    if (msg.includes("SlippageExceeded")) {
+      alert("Slippage too high. The pool ratio may have changed. Try a smaller amount.");
+    } else {
+      alert("Add liquidity failed: " + msg);
+    }
+  });
+}
+
+function doRemoveLP() {
+  if (!userAddress) return;
+  var poolId = selectedPoolIdx;
+  if (poolId < 1) return;
+  contract.getLpShares(poolId, userAddress).then(function(shares) {
+    if (shares === 0n) { alert("No LP shares."); return; }
+    return contract.removeLiquidity(poolId, shares, 0n, 0n);
+  }).then(function(tx) {
+    txOpPending("Remove LP from USDC/EURC", tx);
+  }).catch(function(e) {
+    alert("Remove failed: " + (e.reason || e.message || "").slice(0, 60));
+  });
+}
+
+// ─── My Positions ───
+function updateMyPositions() {
+  var el = document.getElementById("myPosContent");
+  if (!userAddress) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.8rem;">Connect wallet to see LP positions.</p>';
+    return;
+  }
+  if (!CONTRACT_ABI || !CONTRACT_ABI.length || !realPools.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.8rem;">No active LP positions.</p>';
+    return;
+  }
+  el.innerHTML = '<p style="color:var(--muted);font-size:0.8rem;">Loading...</p>';
+  if (!readProvider) readProvider = new ethers.JsonRpcProvider(ARC.rpc);
+  var c = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, readProvider);
+  var promises = [];
+  for (var i = 0; i < realPools.length; i++) promises.push(c.getLpShares(i + 1, userAddress));
+
+  Promise.all(promises).then(function(shares) {
+    var html = "";
+    var anyPos = false;
+    for (var i = 0; i < shares.length; i++) {
+      if (shares[i] > 0n) {
+        anyPos = true;
+        var pool = realPools[i];
+        var pct = pool.liquidityTotal > 0n ? (Number(shares[i]) / Number(pool.liquidityTotal) * 100).toFixed(4) : "0";
+        var u = pool.liquidityTotal > 0n ? ethers.formatUnits(pool.reserve0 * shares[i] / pool.liquidityTotal, 6) : "0";
+        var e = pool.liquidityTotal > 0n ? ethers.formatUnits(pool.reserve1 * shares[i] / pool.liquidityTotal, 6) : "0";
+        html += '<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:0.78rem;">';
+        html += '<div style="font-weight:500;">USDC/EURC</div>';
+        html += '<div style="color:var(--muted);">' + fmtUsd(parseFloat(u)) + ' USDC / ' + fmtUsd(parseFloat(e)) + ' EURC · ' + pct + '% of pool</div></div>';
+      }
+    }
+    el.innerHTML = anyPos ? html : '<p style="color:var(--muted);font-size:0.8rem;">No active LP positions.</p>';
+  }).catch(function() {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.8rem;">Could not load positions.</p>';
+  });
+}
+
+function scrollToLP() {
+  if (realPools.length > 0) selectPool(1);
+  document.getElementById("lpSection").scrollIntoView({ behavior: "smooth" });
+}
+
+// ─── Error handler ───
+window.onerror = function(msg, url, line, col, err) {
+  alert("Script error: " + msg + " (line " + line + ")");
+  console.error("Global error:", msg, url, line, col, err);
+  return true;
+};
+
+// ─── Start ───
+document.addEventListener("DOMContentLoaded", init);
+
+</script>
 </body>
 </html>

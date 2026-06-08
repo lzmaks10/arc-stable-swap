@@ -1,3 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArcStable · StableFX Router</title>
+  <meta name="description" content="Concentrated-liquidity stablecoin swap on Arc Network" />
+  <style>
+    :root {
+      --bg: #060a18; --card: #0c1328; --border: #1a2548;
+      --text: #e2e8f0; --muted: #7b8db5;
+      --accent: #3b82f6; --accent2: #6366f1;
+      --green: #22c55e; --red: #ef4444; --yellow: #eab308;
+      --btn-bg: linear-gradient(135deg, #3b82f6, #6366f1);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; min-height: 100vh; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+    /* ─── Header ─── */
+    header { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 28px; height: 28px; background: var(--btn-bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
+    .logo-text { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+    .logo-sub { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.05em; }
+    nav { display: flex; gap: 4px; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 0.8rem; padding: 6px 14px; border-radius: 8px; transition: all 0.15s; cursor: pointer; }
+    nav a:hover, nav a.active { color: var(--text); background: rgba(59,130,246,0.1); }
+    nav a.active { color: var(--accent); }
+    .top-right { display: flex; align-items: center; gap: 8px; }
+    .chain-badge { font-size: 0.7rem; background: #1a2548; padding: 4px 10px; border-radius: 20px; color: var(--green); border: 1px solid #22c55e33; }
+    #btnConnect { background: var(--btn-bg); color: #fff; border: none; padding: 7px 18px; border-radius: 10px; cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: opacity 0.15s; }
+    #btnConnect:hover { opacity: 0.9; }
+    #walletStatus { font-size: 0.75rem; color: var(--muted); text-align: right; }
+
+    /* ─── Ticker Bar ─── */
+    .ticker-bar { overflow: hidden; padding: 10px 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .ticker-inner { display: inline-flex; gap: 24px; animation: ticker 40s linear infinite; }
+    .ticker-item { font-size: 0.72rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+    .ticker-item .up { color: var(--green); }
+    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* ─── Layout ─── */
+    .page-content { display: flex; gap: 24px; padding: 24px 0; flex-wrap: wrap; }
+    .swap-panel { flex: 1; min-width: 340px; max-width: 440px; }
+    .info-panel { flex: 1; min-width: 340px; }
+
+    /* ─── Cards ─── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .card h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 12px; }
+
+    /* ─── Swap ─── */
+    .swap-input-group { background: #060a18; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+    .swap-input-group label { font-size: 0.7rem; color: var(--muted); display: block; margin-bottom: 4px; }
+    .swap-input-row { display: flex; align-items: center; gap: 8px; }
+    .swap-input-row input { flex: 1; background: none; border: none; color: var(--text); font-size: 1.3rem; font-weight: 500; outline: none; padding: 4px 0; min-width: 0; font-family: inherit; }
+    .swap-input-row input::placeholder { color: #334155; }
+    .token-select { display: flex; align-items: center; gap: 6px; background: #1a2548; padding: 6px 12px 6px 8px; border-radius: 8px; cursor: pointer; border: none; color: var(--text); font-size: 0.85rem; font-weight: 500; transition: background 0.15s; white-space: nowrap; }
+    .token-select:hover { background: #243057; }
+    .token-icon { width: 22px; height: 22px; border-radius: 50%; background: var(--accent2); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #fff; font-weight: 700; }
+    .token-icon.usdc { background: #2775ca; }
+    .token-icon.eurc { background: #1a4d8c; }
+    .token-icon.krw1 { background: #e63946; }
+    .token-icon.jpyc { background: #d4a017; }
+    .swap-arrow { display: flex; justify-content: center; padding: 4px 0; }
+    .swap-arrow button { background: #1a2548; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; color: var(--muted); font-size: 1rem; transition: all 0.15s; }
+    .swap-arrow button:hover { background: #243057; color: var(--text); }
+    .rate-display { font-size: 0.75rem; color: var(--muted); margin: 6px 0; display: flex; justify-content: space-between; }
+    .quick-btns { display: flex; gap: 4px; margin-top: 6px; }
+    .quick-btns button { background: #1a2548; border: none; border-radius: 4px; padding: 3px 10px; font-size: 0.7rem; color: var(--muted); cursor: pointer; }
+    .quick-btns button:hover { background: #243057; color: var(--text); }
+
+    .slippage-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+    .slippage-row label { font-size: 0.72rem; color: var(--muted); }
+    .slippage-row input { width: 60px; background: #060a18; border: 1px solid var(--border); border-radius: 4px; padding: 4px 6px; color: var(--text); font-size: 0.8rem; text-align: center; }
+
+    .btn-swap { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--btn-bg); color: #fff; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-top: 12px; }
+    .btn-swap:hover { opacity: 0.9; }
+    .btn-swap:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .quote-preview { font-size: 0.72rem; color: var(--muted); margin-top: 10px; padding: 10px; background: #060a18; border-radius: 8px; border: 1px solid var(--border); }
+    .quote-preview .row { display: flex; justify-content: space-between; padding: 2px 0; }
+
+    /* ─── Pool Table ─── */
+    .pool-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .pool-table th { text-align: left; padding: 8px 6px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .pool-table td { padding: 10px 6px; border-bottom: 1px solid #0f1a33; }
+    .pool-table tr:hover td { background: rgba(59,130,246,0.03); }
+    .pool-pair { display: flex; align-items: center; gap: 6px; }
+    .pool-pair .icons { display: flex; }
+    .pool-pair .icons span { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; color: #fff; font-weight: 700; margin-right: -6px; border: 2px solid var(--card); }
+    .pool-pair .name { font-weight: 500; }
+    .trend-up { color: var(--green); }
+    .trend-down { color: var(--red); }
+    .badge { font-size: 0.6rem; padding: 2px 8px; border-radius: 4px; background: #1a2548; color: var(--muted); }
+    .badge.fee { background: #1e3a5f; color: var(--accent); }
+
+    /* ─── Stats Bar ─── */
+    .stats-bar { display: flex; gap: 24px; padding: 12px 0; flex-wrap: wrap; }
+    .stat-item { }
+    .stat-item .val { font-size: 1.1rem; font-weight: 600; }
+    .stat-item .lbl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ─── Section tabs ─── */
+    .section-tabs { display: flex; gap: 2px; margin-bottom: 16px; }
+    .section-tabs button { background: none; border: none; padding: 8px 16px; color: var(--muted); font-size: 0.85rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; font-family: inherit; }
+    .section-tabs button:hover { color: var(--text); }
+    .section-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ─── Panels ─── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ─── TX Log ─── */
+    #txLog { max-height: 100px; overflow-y: auto; font-size: 0.7rem; background: #030612; border-radius: 6px; padding: 6px; margin-top: 4px; font-family: monospace; }
+    .tx-row { padding: 2px 0; }
+    .tx-time { color: #334155; }
+    .tx-pending { color: var(--yellow); }
+    .tx-ok { color: var(--green); }
+    .tx-fail { color: var(--red); }
+    .tx-link { color: var(--accent); text-decoration: none; }
+
+    /* ─── Modal ─── */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; min-width: 320px; max-width: 400px; }
+    .modal h3 { margin-bottom: 12px; font-size: 0.95rem; }
+    .modal .token-list { max-height: 300px; overflow-y: auto; }
+    .modal .token-option { display: flex; align-items: center; gap: 10px; padding: 10px 8px; cursor: pointer; border-radius: 8px; }
+    .modal .token-option:hover { background: rgba(59,130,246,0.08); }
+    .modal .token-option .symbol { font-weight: 500; font-size: 0.9rem; }
+    .modal .token-option .name { font-size: 0.7rem; color: var(--muted); }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+      .page-content { flex-direction: column; }
+      .swap-panel { max-width: 100%; }
+      header { flex-direction: column; align-items: stretch; }
+      .top-right { justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">s</div>
+      <div>
+        <div class="logo-text">ArcStable</div>
+        <div class="logo-sub">STABLE FX · ARC L1</div>
+      </div>
+    </div>
+    <nav>
+      <a class="active" data-panel="swap">Swap</a>
+      <a data-panel="pools">Pools</a>
+      <a data-panel="stats">Stats</a>
+    </nav>
+    <div class="top-right">
+      <span class="chain-badge">Arc Testnet</span>
+      <button id="btnConnect">Connect Wallet</button>
+      <span id="walletStatus" style="font-size:0.7rem;color:var(--muted);"></span>
+    </div>
+  </header>
+
+  <!-- Ticker -->
+  <div class="ticker-bar" id="tickerBar">
+    <div class="ticker-inner" id="tickerInner"></div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-item"><div class="val" id="statTvl">—</div><div class="lbl">TVL</div></div>
+    <div class="stat-item"><div class="val" id="statVol">—</div><div class="lbl">24H Volume</div></div>
+    <div class="stat-item"><div class="val" id="statSlip">—</div><div class="lbl">Avg Slippage</div></div>
+    <div class="stat-item"><div class="val" id="statPairs">—</div><div class="lbl">Active Pairs</div></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="page-content">
+
+    <!-- LEFT: Swap Panel -->
+    <div class="swap-panel">
+      <div class="card">
+        <h2>Swap</h2>
+
+        <!-- YOU PAY -->
+        <div class="swap-input-group">
+          <label>You Pay</label>
+          <div class="swap-input-row">
+            <input id="inputAmount" type="text" placeholder="0.00" value="1000" />
+            <button class="token-select" id="btnTokenFrom" onclick="openTokenModal('from')">
+              <span class="token-icon usdc">u</span>
+              <span id="tokenFromLabel">USDC</span>
+              <span style="font-size:0.6rem;color:var(--muted);">▾</span>
+            </button>
+          </div>
+          <div class="quick-btns">
+            <button onclick="setPercent(25)">25%</button>
+            <button onclick="setPercent(50)">50%</button>
+            <button onclick="setPercent(100)">MAX</button>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="swap-arrow">
+          <button onclick="swapTokens()">⇅</button>
+        </div>
+
+        <!-- YOU RECEIVE -->
+        <div class="swap-input-group">
+          <label>You Receive (est.)</label>
+          <div class="swap-input-row">
+            <input id="outputAmount" type="text" placeholder="0.00" readonly />
+            <button class="token-select" id="btnTokenTo" onclick="openTokenModal('to')">
+              <span class="token-icon eurc">e</span>
+              <span id="tokenToLabel">EURC</span>
+              <span style="font-size:0.6rem;color:var(--muted);">▾</span>
+            </button>
+          </div>
+          <div class="rate-display">
+            <span>Rate</span>
+            <span id="rateDisplay">1 USDC = — EURC</span>
+          </div>
+        </div>
+
+        <!-- Slippage -->
+        <div class="slippage-row">
+          <label>Slippage Tolerance</label>
+          <input id="slippageInput" type="number" value="0.30" step="0.05" min="0.05" max="5" />
+          <span style="font-size:0.72rem;color:var(--muted);">%</span>
+        </div>
+
+        <!-- Quote Preview -->
+        <div class="quote-preview" id="quotePreview">
+          <div class="row"><span>Rate</span><span id="qpRate">—</span></div>
+          <div class="row"><span>Fee (0.04%)</span><span id="qpFee">—</span></div>
+          <div class="row"><span>Est. Received</span><span id="qpOutput">—</span></div>
+          <div class="row"><span>Route</span><span id="qpRoute">—</span></div>
+          <div class="row"><span>Slippage</span><span id="qpSlip">0.30%</span></div>
+        </div>
+
+        <!-- Swap Result Banner -->
+        <div id="swapResult" style="display:none;"></div>
+        <button class="btn-swap" id="btnSwap" onclick="doSwap()">Connect Wallet to Trade</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Info Panel -->
+    <div class="info-panel">
+
+      <!-- Section Tabs -->
+      <div class="section-tabs">
+        <button class="active" data-subpanel="pools">Pools</button>
+        <button data-subpanel="mypos">My Positions</button>
+        <button data-subpanel="txlog">Activity</button>
+      </div>
+
+      <!-- Pool Table -->
+      <div class="panel active" id="subPools">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h2 style="margin-bottom:0;">Liquidity Pools</h2>
+            <button class="btn-swap" style="width:auto;padding:6px 14px;font-size:0.75rem;margin-top:0;" onclick="scrollToLP()">+ Provide Liquidity</button>
+          </div>
+          <table class="pool-table">
+            <thead>
+              <tr>
+                <th>Pair</th>
+                <th>TVL</th>
+                <th>24H Vol</th>
+                <th>Fee</th>
+                <th>APR</th>
+                <th>Util</th>
+              </tr>
+            </thead>
+            <tbody id="poolTableBody">
+              <tr><td colspan="6" style="text-align:center;color:var(--muted);font-size:0.75rem;">Loading pools...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- My Positions -->
+      <div class="panel" id="subMyPos">
+        <div class="card">
+          <h2>My Positions</h2>
+          <div id="myPosContent">
+            <p style="color:var(--muted);font-size:0.8rem;">Connect wallet to see LP positions.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TX Log -->
+      <div class="panel" id="subTxlog">
+        <div class="card">
+          <h2>Activity</h2>
+          <div id="txLog"><span class="muted" style="color:var(--muted);font-size:0.75rem;">No transactions yet.</span></div>
+        </div>
+      </div>
+
+      <!-- LP Add Section -->
+      <div class="card" id="lpSection">
+        <h2>Provide Liquidity</h2>
+        <div id="lpContent">
+          <p style="color:var(--muted);font-size:0.8rem;">Select a pair above to add liquidity.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Token Modal -->
+  <div class="modal-overlay" id="tokenModal">
+    <div class="modal">
+      <h3>Select Token</h3>
+      <div class="token-list" id="tokenList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer: Contract Info -->
+<div style="text-align:center;padding:16px 0 32px;border-top:1px solid var(--border);font-size:0.7rem;color:var(--muted);">
+  <div id="contractInfoFooter"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.5/ethers.umd.min.js"></script>
+<script>
+// Contract info (embedded)
+var EMBEDDED_CONTRACT = "0x84F5DC7c0e07Dd070FAE37626d1fe93FB7C86DBd";
+var EMBEDDED_ABI = [{"type":"constructor","inputs":[{"name":"_usdc","type":"address","internalType":"address"}],"stateMutability":"nonpayable"},{"type":"function","name":"BPS","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"MAX_A","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"MAX_FEE","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"MIN_A","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"N_COINS","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"addLiquidity","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"amount0","type":"uint256","internalType":"uint256"},{"name":"amount1","type":"uint256","internalType":"uint256"},{"name":"minShares","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"shares","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"addLiquiditySingle","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"amountUSDC","type":"uint256","internalType":"uint256"},{"name":"minShares","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"shares","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"claimFees","inputs":[{"name":"id","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"createPool","inputs":[{"name":"_token1","type":"address","internalType":"address"},{"name":"_decimals1","type":"uint8","internalType":"uint8"},{"name":"_A","type":"uint256","internalType":"uint256"},{"name":"_swapFee","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"feeCollector","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"getAmountOut","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"tokenIn","type":"address","internalType":"address"},{"name":"amountIn","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"amountOut","type":"uint256","internalType":"uint256"},{"name":"fee","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"getLpShares","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"lp","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"getPool","inputs":[{"name":"id","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"token1","type":"address","internalType":"address"},{"name":"decimals1","type":"uint8","internalType":"uint8"},{"name":"A","type":"uint256","internalType":"uint256"},{"name":"swapFee","type":"uint256","internalType":"uint256"},{"name":"reserve0","type":"uint256","internalType":"uint256"},{"name":"reserve1","type":"uint256","internalType":"uint256"},{"name":"liquidityTotal","type":"uint256","internalType":"uint256"},{"name":"active","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"lpFeeDebt","inputs":[{"name":"","type":"uint256","internalType":"uint256"},{"name":"","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"lpShares","inputs":[{"name":"","type":"uint256","internalType":"uint256"},{"name":"","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"owner","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"pendingFees","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"lp","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"poolCount","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"pools","inputs":[{"name":"","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"token1","type":"address","internalType":"address"},{"name":"decimals1","type":"uint8","internalType":"uint8"},{"name":"A","type":"uint256","internalType":"uint256"},{"name":"swapFee","type":"uint256","internalType":"uint256"},{"name":"adminFee","type":"uint256","internalType":"uint256"},{"name":"reserve0","type":"uint256","internalType":"uint256"},{"name":"reserve1","type":"uint256","internalType":"uint256"},{"name":"liquidityTotal","type":"uint256","internalType":"uint256"},{"name":"active","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"removeLiquidity","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"shares","type":"uint256","internalType":"uint256"},{"name":"minAmount0","type":"uint256","internalType":"uint256"},{"name":"minAmount1","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"amount0","type":"uint256","internalType":"uint256"},{"name":"amount1","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"setFeeCollector","inputs":[{"name":"_feeCollector","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"swap","inputs":[{"name":"id","type":"uint256","internalType":"uint256"},{"name":"tokenIn","type":"address","internalType":"address"},{"name":"amountIn","type":"uint256","internalType":"uint256"},{"name":"minAmountOut","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"amountOut","type":"uint256","internalType":"uint256"}],"stateMutability":"nonpayable"},{"type":"function","name":"tokenToPid","inputs":[{"name":"","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"transferOwnership","inputs":[{"name":"newOwner","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"tvl","inputs":[{"name":"id","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"usdc","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"event","name":"FeesClaimed","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"lp","type":"address","indexed":true,"internalType":"address"},{"name":"amount","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"LiquidityAdded","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"provider","type":"address","indexed":true,"internalType":"address"},{"name":"amount0","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"amount1","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"shares","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"LiquidityRemoved","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"provider","type":"address","indexed":true,"internalType":"address"},{"name":"amount0","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"amount1","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"shares","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"PoolCreated","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"token1","type":"address","indexed":true,"internalType":"address"},{"name":"A","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"fee","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"Swapped","inputs":[{"name":"id","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"user","type":"address","indexed":true,"internalType":"address"},{"name":"tokenIn","type":"address","indexed":false,"internalType":"address"},{"name":"tokenOut","type":"address","indexed":false,"internalType":"address"},{"name":"amountIn","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"amountOut","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"fee","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"error","name":"AlreadyClaimed","inputs":[]},{"type":"error","name":"InsufficientLiquidity","inputs":[]},{"type":"error","name":"InvalidAmount","inputs":[]},{"type":"error","name":"InvalidPair","inputs":[]},{"type":"error","name":"InvalidToken","inputs":[]},{"type":"error","name":"NotOwner","inputs":[]},{"type":"error","name":"OverflowCheck","inputs":[]},{"type":"error","name":"PoolExists","inputs":[]},{"type":"error","name":"SlippageExceeded","inputs":[]}];
+
 // ArcStable v4  —  Production stableswap with single-sided LP
 // ─── Contract info (embedded in contract-embed.js) ───
 // EMBEDDED_CONTRACT, EMBEDDED_ABI set by contract-embed.js
@@ -160,6 +495,8 @@ function loadPools() {
     renderPoolTable(pools);
     updateStats(pools);
     initTicker(pools);
+    // Auto-select first pool so LP buttons appear
+    selectPool(1);
   }).catch(function(e) {
     console.log("Pool load error:", e.message);
     renderEmptyPools();
@@ -709,8 +1046,20 @@ function updateMyPositions() {
 }
 
 function scrollToLP() {
+  if (realPools.length > 0) selectPool(1);
   document.getElementById("lpSection").scrollIntoView({ behavior: "smooth" });
 }
 
+// ─── Error handler ───
+window.onerror = function(msg, url, line, col, err) {
+  alert("Script error: " + msg + " (line " + line + ")");
+  console.error("Global error:", msg, url, line, col, err);
+  return true;
+};
+
 // ─── Start ───
 document.addEventListener("DOMContentLoaded", init);
+
+</script>
+</body>
+</html>
